@@ -1,7 +1,6 @@
 "Test that the plugin is loaded in Elasticsearch":
   - do:
       cat.plugins:
-        local: true
         h: component
 
   - match:
