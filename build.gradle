@@ -7,9 +7,9 @@ group = "ai.philterd"
 version = "1.0.0-SNAPSHOT"
 
 esplugin {
-    name 'phinder'
-    description 'Phinder'
-    classname "ai.philterd.phinder.PhinderPlugin"
+    name 'search-redact'
+    description 'Search Redact'
+    classname "ai.philterd.searchredact.ElasticsearchRedactPlugin"
     licenseFile rootProject.file('LICENSE.txt')
     noticeFile rootProject.file('NOTICE.txt')
 }

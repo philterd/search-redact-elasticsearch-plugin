@@ -1,8 +1,8 @@
 services:
 
-  phinder:
+  search-redact:
     build: ./
-    container_name: phinder 
+    container_name: search-redact 
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false

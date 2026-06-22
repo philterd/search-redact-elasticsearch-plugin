@@ -1,8 +1,8 @@
-# Phinder PII Plugin for Elasticsearch
+# Search Redact Plugin for Elasticsearch
 
 This repository is a plugin for Elasticsearch that redacts PII from search results. It uses the [phileas](https://github.com/philterd/phileas/) library for redaction.
 
-There is also a [version](https://github.com/philterd/phinder-pii-opensearch-plugin) available for OpenSearch which serves as the upstream for this repository.
+There is also a [version](https://github.com/philterd/search-redact-opensearch-plugin) available for OpenSearch which serves as the upstream for this repository.
 
 ## Build and Install
 
@@ -15,7 +15,7 @@ To build the plugin:
 To install the plugin:
 
 ```
-/usr/share/elasticsearch/bin/elasticsearch-plugin install --batch file:/path/to/phinder-1.0.0-SNAPSHOT.zip
+/usr/share/elasticsearch/bin/elasticsearch-plugin install --batch file:/path/to/search-redact-1.0.0-SNAPSHOT.zip
 ```
 
 ## Using Docker
@@ -63,7 +63,7 @@ we are going to redact email addresses that appear in the `description` field:
 curl -s http://localhost:9200/sample_index/_search -H "Content-Type: application/json" -d'
    {
     "ext": {
-       "phinder": {
+       "search-redact": {
           "field": "description",
           "policy": "{\"identifiers\": {\"emailAddress\":{\"emailAddressFilterStrategies\":[{\"strategy\":\"REDACT\",\"redactionFormat\":\"{{{REDACTED-%t}}}\"}]}}}"
         }

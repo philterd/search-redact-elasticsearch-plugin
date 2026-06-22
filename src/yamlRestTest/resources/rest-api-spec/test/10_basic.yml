@@ -4,4 +4,4 @@
         h: component
 
   - match:
-      $body:  /^phinder\n$/
+      $body:  /^search-redact\n$/

@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.philterd.phinder;
+package ai.philterd.searchredact;
 
 import ai.philterd.phileas.model.cache.InMemoryCache;
 import ai.philterd.phileas.model.configuration.PhileasConfiguration;
 import ai.philterd.phileas.model.services.CacheService;
 import ai.philterd.phileas.services.PhileasFilterService;
-import ai.philterd.phinder.ext.PhinderParametersExtBuilder;
+import ai.philterd.searchredact.ext.SearchRedactParametersExtBuilder;
 import org.elasticsearch.action.support.ActionFilter;
 import org.elasticsearch.plugins.ActionPlugin;
 import org.elasticsearch.plugins.Plugin;
@@ -31,7 +31,7 @@ import java.util.Properties;
 
 import static java.util.Collections.singletonList;
 
-public class PhinderPlugin extends Plugin implements ActionPlugin, SearchPlugin {
+public class ElasticsearchRedactPlugin extends Plugin implements ActionPlugin, SearchPlugin {
 
     @Override
     public List<ActionFilter> getActionFilters() {
@@ -43,7 +43,7 @@ public class PhinderPlugin extends Plugin implements ActionPlugin, SearchPlugin 
             final CacheService cacheService = new InMemoryCache();
             final PhileasFilterService phileasFilterService = new PhileasFilterService(phileasConfiguration, cacheService);
 
-            return singletonList(new PhinderActionFilter(phileasFilterService));
+            return singletonList(new SearchRedactActionFilter(phileasFilterService));
 
         } catch (Exception ex) {
             throw new RuntimeException("Unable to initialize Phileas.", ex);
@@ -58,7 +58,7 @@ public class PhinderPlugin extends Plugin implements ActionPlugin, SearchPlugin 
         final List<SearchExtSpec<?>> searchExts = new ArrayList<>();
 
         searchExts.add(
-                new SearchExtSpec<>(PhinderParametersExtBuilder.PHINDER_PARAMETERS_NAME, PhinderParametersExtBuilder::new, PhinderParametersExtBuilder::parse)
+                new SearchExtSpec<>(SearchRedactParametersExtBuilder.SEARCH_REDACT_PARAMETERS_NAME, SearchRedactParametersExtBuilder::new, SearchRedactParametersExtBuilder::parse)
         );
 
         return searchExts;
