@@ -2,6 +2,7 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'elasticsearch.esplugin'
 apply plugin: 'elasticsearch.yaml-rest-test'
+apply plugin: 'maven-publish'
 
 group = "ai.philterd"
 version = "1.0.0-SNAPSHOT"
@@ -68,4 +69,47 @@ repositories {
     maven { url "https://plugins.gradle.org/m2/" }
     maven { url "https://artifacts.philterd.ai/releases" }
     maven { url "https://artifacts.philterd.ai/snapshots" }
+}
+
+publishing {
+    publications {
+        pluginZip(MavenPublication) { publication ->
+            artifact bundlePlugin
+            pom {
+                name = "search-redact-elasticsearch-plugin"
+                description = "An Elasticsearch plugin to redact PII from search results"
+                groupId = "ai.philterd"
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'philterd'
+                        name = 'jzonthemtn'
+                        email = 'jeff.zemerick@philterd.ai'
+                        organization = 'Philterd, LLC'
+                        organizationUrl = 'https://www.philterd.ai'
+                        url = 'https://www.philterd.ai'
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        // Snapshots are published to the Central Portal snapshot repository. Releases are not
+        // handled here. Credentials come from the CENTRAL_USERNAME / CENTRAL_PASSWORD environment
+        // variables (a Central Portal user token), supplied by CI.
+        maven {
+            name = "centralSnapshots"
+            url = "https://central.sonatype.com/repository/maven-snapshots/"
+            credentials {
+                username = System.getenv("CENTRAL_USERNAME")
+                password = System.getenv("CENTRAL_PASSWORD")
+            }
+        }
+    }
 }
