@@ -1,6 +1,6 @@
 FROM elasticsearch:9.4.2
 
-ARG VERSION="9.4.2-SNAPSHOT"
+ARG VERSION="9.4.2.1-SNAPSHOT"
 
 COPY ./build/distributions/search-redact-${VERSION}.zip /tmp/
 
