@@ -15,10 +15,10 @@
  */
 package ai.philterd.searchredact;
 
-import ai.philterd.phileas.model.cache.InMemoryCache;
-import ai.philterd.phileas.model.configuration.PhileasConfiguration;
-import ai.philterd.phileas.model.services.CacheService;
-import ai.philterd.phileas.services.PhileasFilterService;
+import ai.philterd.phileas.PhileasConfiguration;
+import ai.philterd.phileas.services.context.DefaultContextService;
+import ai.philterd.phileas.services.disambiguation.vector.InMemoryVectorService;
+import ai.philterd.phileas.services.filters.filtering.PlainTextFilterService;
 import ai.philterd.searchredact.ext.SearchRedactParametersExtBuilder;
 import org.elasticsearch.action.support.ActionFilter;
 import org.elasticsearch.plugins.ActionPlugin;
@@ -40,10 +40,10 @@ public class ElasticsearchRedactPlugin extends Plugin implements ActionPlugin, S
 
             final Properties properties = new Properties();
             final PhileasConfiguration phileasConfiguration = new PhileasConfiguration(properties);
-            final CacheService cacheService = new InMemoryCache();
-            final PhileasFilterService phileasFilterService = new PhileasFilterService(phileasConfiguration, cacheService);
+            final PlainTextFilterService filterService = new PlainTextFilterService(
+                    phileasConfiguration, new DefaultContextService(), new InMemoryVectorService(), null);
 
-            return singletonList(new SearchRedactActionFilter(phileasFilterService));
+            return singletonList(new SearchRedactActionFilter(filterService));
 
         } catch (Exception ex) {
             throw new RuntimeException("Unable to initialize Phileas.", ex);

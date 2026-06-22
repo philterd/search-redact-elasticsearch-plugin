@@ -15,13 +15,13 @@
  */
 package ai.philterd.searchredact;
 
-import ai.philterd.phileas.model.enums.MimeType;
-import ai.philterd.phileas.model.policy.Policy;
-import ai.philterd.phileas.model.responses.FilterResponse;
-import ai.philterd.phileas.services.PhileasFilterService;
+import ai.philterd.phileas.model.filtering.TextFilterResult;
+import ai.philterd.phileas.policy.Policy;
+import ai.philterd.phileas.services.filters.filtering.PlainTextFilterService;
 import ai.philterd.searchredact.ext.SearchRedactParameters;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
@@ -40,10 +40,10 @@ import java.util.Map;
 
 public class SearchRedactActionFilter implements ActionFilter {
 
-    private final PhileasFilterService phileasFilterService;
+    private final PlainTextFilterService filterService;
 
-    public SearchRedactActionFilter(final PhileasFilterService phileasFilterService) {
-        this.phileasFilterService = phileasFilterService;
+    public SearchRedactActionFilter(final PlainTextFilterService filterService) {
+        this.filterService = filterService;
     }
 
     @Override
@@ -111,43 +111,45 @@ public class SearchRedactActionFilter implements ActionFilter {
                 // LOGGER.info("policy = {}, context = {}, field = {}", policyJson, context, fieldName);
 
                 final ObjectMapper objectMapper = new ObjectMapper();
+                final String redactionContext = context != null ? context : "search-redact";
 
-                final Policy policy = AccessController.doPrivileged((PrivilegedAction<Policy>) () -> {
-                        try {
-                            return objectMapper.readValue(policyJson, Policy.class);
-                        } catch (JsonProcessingException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    });
+                // Gson uses reflection, so parse the policy inside a privileged block.
+                final Policy policy = AccessController.doPrivileged(
+                        (PrivilegedAction<Policy>) () -> new Gson().fromJson(policyJson, Policy.class));
 
                 for (final SearchHit hit : ((SearchResponse) response).getHits().getHits()) {
 
-                    for(final String field : fields) {
+                    // Elasticsearch asserts getSourceAsMap() is called only once per hit, so read it
+                    // once, redact every requested field in it, then write it back a single time.
+                    final Map<String, Object> sourceMap = hit.getSourceAsMap();
+                    boolean modified = false;
 
-                        if (hit.getSourceAsMap().containsKey(field)) {
+                    for (final String field : fields) {
+
+                        if (sourceMap.containsKey(field)) {
 
                             // Look for PII by applying the policy to the selected field.
-                            final String input = hit.getSourceAsMap().get(field).toString();
+                            final String input = sourceMap.get(field).toString();
 
-                            final FilterResponse filterResponse = phileasFilterService.filter(policy, context, hit.getId(), input, MimeType.TEXT_PLAIN);
+                            final TextFilterResult filterResult = filterService.filter(policy, redactionContext, input);
 
-                            final Map<String, Object> sourceMap = hit.getSourceAsMap();
-                            sourceMap.put(field, filterResponse.getFilteredText());
+                            sourceMap.put(field, filterResult.getFilteredText());
+                            modified = true;
 
-                            AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
-                                try {
-                                    final Map<String, Object> map = new HashMap<>(sourceMap);
-                                    hit.sourceRef(new BytesArray(objectMapper.writeValueAsBytes(map)));
-                                    return null;
-                                } catch (JsonProcessingException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            });
-
-                        } else {
-                            //LOGGER.warn("Search request wanted field {} to be redacted but field was not found.", field);
                         }
+                        // A requested field that is not present in the hit is skipped.
 
+                    }
+
+                    if (modified) {
+                        AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+                            try {
+                                hit.sourceRef(new BytesArray(objectMapper.writeValueAsBytes(sourceMap)));
+                                return null;
+                            } catch (JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
                     }
 
                 }

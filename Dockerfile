@@ -1,7 +1,7 @@
-FROM elasticsearch:9.2.1
+FROM elasticsearch:9.4.2
 
-ARG VERSION="1.0.0-SNAPSHOT"
+ARG VERSION="9.4.2-SNAPSHOT"
 
-COPY ./build/distributions/phinder-${VERSION}.zip /tmp/
+COPY ./build/distributions/search-redact-${VERSION}.zip /tmp/
 
-RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch file:/tmp/phinder-${VERSION}.zip
+RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch file:/tmp/search-redact-${VERSION}.zip
