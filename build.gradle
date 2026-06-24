@@ -21,6 +21,7 @@ esplugin {
 }
 
 java {
+    // Java 21 to match the Elasticsearch runtime the plugin is loaded into.
     targetCompatibility = JavaVersion.VERSION_21
     sourceCompatibility = JavaVersion.VERSION_21
 }
